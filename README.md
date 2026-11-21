@@ -1,27 +1,31 @@
 # Music Player Design
 
-A fresh Android music-player UI concept built with **Kotlin + Jetpack Compose**.
+A polished Android music-player interface prototype built with **Kotlin + Jetpack Compose**.
 
-> This repository is a visual prototype. Music playback, media scanning, downloads, accounts, and streaming are intentionally not implemented yet.
+## Design direction
+A premium dark-first music experience with rich violet accents, custom crowned music-note branding, smooth section navigation, and a matching light theme.
 
-## Design preview
-- Premium dark-first music dashboard
-- Home, Search, Library, Albums, Artists, Playlists and Now Playing screens
-- Light / dark appearance switch
-- Interactive navigation, search field, library filters and player controls (visual state only)
-- Responsive Compose layouts and Material 3 components
+## Included screens
+- Home dashboard
+- Search screen with local sample results
+- Library
+- Albums
+- Artists
+- Playlists
+- Full-screen Now Playing design
+- Compact mini-player and five-tab bottom navigation
+- Light / dark theme toggle
 
-## Run
-1. Open this repository in the latest stable Android Studio.
-2. Allow Gradle to sync and install the Android SDK requested by the project.
-3. Run the `app` configuration on an emulator or Android device.
+## Prototype boundaries
+This project is intentionally a **visual design prototype**. Sample content and navigation are included so every section can be opened and reviewed. Audio playback, device music scanning, streaming, downloads, accounts, and other production features are not implemented. Player buttons are visual/demo controls only.
 
-Package: `com.sonora.musicdesign`
+## Build
+Open the project in Android Studio, allow Gradle sync, then run the `app` configuration on an emulator or Android device.
 
-## Project structure
-- `app/src/main/java/com/sonora/musicdesign/MainActivity.kt` — app UI and navigation
-- `app/src/main/java/com/sonora/musicdesign/ui/theme/Theme.kt` — color system and typography
-- `app/src/main/AndroidManifest.xml` — Android app entry point
+A GitHub Actions workflow is configured to build a debug APK and publish it as a workflow artifact after a successful run.
 
-## Prototype scope
-All displayed music, artists, albums and playlists are sample content. Player controls update the interface only; no audio is played.
+## App details
+- Display name: **Music Player Design**
+- Package: `com.sonora.musicdesign`
+- Min SDK: 24
+- Target SDK: 35
