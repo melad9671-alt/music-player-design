@@ -8,10 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,130 +23,96 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 
-private val Purple = Color(0xFF9147FF)
-private val Pink = Color(0xFFE05BB7)
-private val Gold = Color(0xFFFFC857)
+private val Ink = Color(0xFF090811)
+private val Panel = Color(0xFF171421)
+private val Violet = Color(0xFF9B6BFF)
+private val Lavender = Color(0xFFD5C0FF)
+private val Rose = Color(0xFFFF79C8)
+private val Soft = Color(0xFFA8A1B7)
 
-private data class Track(
-    val title: String,
-    val artist: String,
-    val album: String,
-    val duration: String,
-    val art: String
+private data class Song(val title: String, val artist: String, val album: String, val length: String, val colors: List<Color>, val mark: String)
+private val songs = listOf(
+    Song("Pink Venom", "BLACKPINK", "BORN PINK", "3:06", listOf(Color(0xFF32134C), Color(0xFFB23D87)), "P"),
+    Song("Flower", "JISOO", "ME", "2:54", listOf(Color(0xFF542C66), Color(0xFFE9A2B7)), "F"),
+    Song("Super Shy", "NewJeans", "Get Up", "2:34", listOf(Color(0xFF173C52), Color(0xFF66B8B0)), "S"),
+    Song("Love wins all", "IU", "The Winning", "4:31", listOf(Color(0xFF4B315F), Color(0xFFB28ACB)), "L"),
+    Song("How You Like That", "BLACKPINK", "THE ALBUM", "3:01", listOf(Color(0xFF211A43), Color(0xFF9C5FC5)), "H"),
+    Song("Ditto", "NewJeans", "OMG", "3:05", listOf(Color(0xFF1C3D4A), Color(0xFF9BC8C0)), "D")
 )
-
-private data class Artist(val name: String, val subtitle: String, val image: String)
-
-private val tracks = listOf(
-    Track("Pink Venom", "BLACKPINK", "BORN PINK", "3:06", "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=900"),
-    Track("Dream Big", "NewJeans", "Dream Big", "3:24", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=900"),
-    Track("Forever", "IU", "The Collection", "3:41", "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=900"),
-    Track("Midnight", "Jisoo", "ME", "2:58", "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=900"),
-    Track("Stay", "The Weekend", "After Hours", "3:52", "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900"),
-    Track("Blue Hour", "TXT", "minisode", "3:18", "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900")
-)
-
-private val artists = listOf(
-    Artist("BLACKPINK", "4 songs", "https://images.unsplash.com/photo-1524368638413-6e6b9e4f8f1b?w=700"),
-    Artist("Jisoo", "3 songs", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=700"),
-    Artist("NewJeans", "8 songs", "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=700"),
-    Artist("IU", "5 songs", "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=700")
-)
-
-private enum class MusicTab(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    HOME("Home", Icons.Filled.Home),
-    SEARCH("Search", Icons.Filled.Search),
-    ALBUMS("Albums", Icons.Filled.Album),
-    ARTISTS("Artists", Icons.Filled.Person),
-    LIBRARY("Library", Icons.Filled.LibraryMusic)
-}
+private enum class Page(val label: String) { HOME("Home"), SEARCH("Search"), ALBUMS("Albums"), ARTISTS("Artists"), LIBRARY("Library") }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MusicPlayerApp() }
+        window.statusBarColor = android.graphics.Color.rgb(9, 8, 17)
+        window.navigationBarColor = android.graphics.Color.rgb(9, 8, 17)
+        setContent { NoireMusicApp() }
     }
 }
 
 @Composable
-private fun MusicPlayerApp() {
-    var tab by remember { mutableStateOf(MusicTab.HOME) }
-    var selectedTrack by remember { mutableStateOf(tracks.first()) }
-    var playerOpen by remember { mutableStateOf(false) }
-    var darkMode by remember { mutableStateOf(true) }
+private fun NoireMusicApp() {
+    var page by remember { mutableStateOf(Page.HOME) }
+    var current by remember { mutableStateOf(songs.first()) }
+    var player by remember { mutableStateOf(false) }
+    var playing by remember { mutableStateOf(false) }
+    var liked by remember { mutableStateOf(false) }
+    var dark by remember { mutableStateOf(true) }
     var query by remember { mutableStateOf("") }
-
-    val background = if (darkMode) Color(0xFF0A0812) else Color(0xFFF5F1FA)
-    val surface = if (darkMode) Color(0xFF171323) else Color.White
-    val primaryText = if (darkMode) Color.White else Color(0xFF211A2D)
-    val secondaryText = if (darkMode) Color(0xFFAAA2BA) else Color(0xFF756B82)
-    val scheme = if (darkMode) darkColorScheme(
-        primary = Purple, background = background, surface = surface,
-        onBackground = primaryText, onSurface = primaryText
-    ) else lightColorScheme(
-        primary = Purple, background = background, surface = surface,
-        onBackground = primaryText, onSurface = primaryText
-    )
+    val bg = if (dark) Ink else Color(0xFFF7F4FC)
+    val panel = if (dark) Panel else Color.White
+    val fg = if (dark) Color.White else Color(0xFF211A2D)
+    val muted = if (dark) Soft else Color(0xFF777084)
+    val scheme = if (dark) darkColorScheme(primary = Violet, background = bg, surface = panel, onSurface = fg) else lightColorScheme(primary = Violet, background = bg, surface = panel, onSurface = fg)
 
     MaterialTheme(colorScheme = scheme) {
-        Surface(modifier = Modifier.fillMaxSize(), color = background) {
-            if (playerOpen) {
-                PlayerScreen(
-                    track = selectedTrack,
-                    darkMode = darkMode,
-                    onBack = { playerOpen = false },
-                    onNext = { selectedTrack = tracks[(tracks.indexOf(selectedTrack) + 1) % tracks.size] },
-                    onPrevious = { selectedTrack = tracks[(tracks.indexOf(selectedTrack) - 1 + tracks.size) % tracks.size] },
-                    primaryText = primaryText,
-                    secondaryText = secondaryText
-                )
+        Surface(Modifier.fillMaxSize(), color = bg) {
+            if (player) {
+                PlayerPage(current, playing, liked, fg, muted, dark,
+                    onBack = { player = false }, onPlay = { playing = !playing }, onLike = { liked = !liked },
+                    onNext = { current = songs[(songs.indexOf(current) + 1) % songs.size] },
+                    onPrevious = { current = songs[(songs.indexOf(current) - 1 + songs.size) % songs.size] })
             } else {
                 Scaffold(
-                    containerColor = background,
+                    containerColor = bg,
                     bottomBar = {
-                        Column {
-                            MiniPlayer(selectedTrack, primaryText, secondaryText) { playerOpen = true }
-                            NavigationBar(containerColor = surface, contentColor = primaryText) {
-                                MusicTab.values().forEach { item ->
+                        Column(Modifier.background(bg)) {
+                            MiniNowPlaying(current, playing, panel, fg, muted, { player = true }, { playing = !playing })
+                            NavigationBar(containerColor = panel, tonalElevation = 0.dp) {
+                                Page.values().forEach { item ->
+                                    val icon = when (item) {
+                                        Page.HOME -> Icons.Filled.Home
+                                        Page.SEARCH -> Icons.Filled.Search
+                                        Page.ALBUMS -> Icons.Filled.Album
+                                        Page.ARTISTS -> Icons.Filled.People
+                                        Page.LIBRARY -> Icons.Filled.LibraryMusic
+                                    }
                                     NavigationBarItem(
-                                        selected = tab == item,
-                                        onClick = { tab = item },
-                                        icon = { Icon(item.icon, contentDescription = item.label) },
+                                        selected = page == item, onClick = { page = item },
+                                        icon = { Icon(icon, contentDescription = item.label) },
                                         label = { Text(item.label, fontSize = 10.sp) },
                                         colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = Color.White,
-                                            selectedTextColor = Purple,
-                                            indicatorColor = Purple.copy(alpha = 0.28f),
-                                            unselectedIconColor = secondaryText,
-                                            unselectedTextColor = secondaryText
+                                            selectedIconColor = Lavender, selectedTextColor = Lavender,
+                                            indicatorColor = Violet.copy(alpha = 0.24f),
+                                            unselectedIconColor = muted, unselectedTextColor = muted
                                         )
                                     )
                                 }
                             }
                         }
                     }
-                ) { padding ->
-                    when (tab) {
-                        MusicTab.HOME -> HomeScreen(
-                            padding, primaryText, secondaryText, surface,
-                            onOpenPlayer = { selectedTrack = it; playerOpen = true },
-                            onTab = { tab = it },
-                            onSettings = { darkMode = !darkMode }
-                        )
-                        MusicTab.SEARCH -> SearchScreen(
-                            padding, query, { query = it }, primaryText, secondaryText,
-                            onTrack = { selectedTrack = it; playerOpen = true }
-                        )
-                        MusicTab.ALBUMS -> AlbumsScreen(padding, primaryText, secondaryText, onTrack = { selectedTrack = it; playerOpen = true })
-                        MusicTab.ARTISTS -> ArtistsScreen(padding, primaryText, secondaryText)
-                        MusicTab.LIBRARY -> LibraryScreen(padding, primaryText, secondaryText, surface, onTab = { tab = it }, onTrack = { selectedTrack = it; playerOpen = true })
+                ) { inset ->
+                    when (page) {
+                        Page.HOME -> HomePage(inset, fg, muted, dark, { dark = !dark }, { current = it; player = true }, { page = it })
+                        Page.SEARCH -> SearchPage(inset, query, { query = it }, fg, muted, { current = it; player = true })
+                        Page.ALBUMS -> AlbumsPage(inset, fg, muted, { current = it; player = true })
+                        Page.ARTISTS -> ArtistsPage(inset, fg, muted)
+                        Page.LIBRARY -> LibraryPage(inset, fg, muted, { page = it }, { current = it; player = true })
                     }
                 }
             }
@@ -155,134 +121,136 @@ private fun MusicPlayerApp() {
 }
 
 @Composable
-private fun HomeScreen(
-    padding: PaddingValues,
-    text: Color,
-    muted: Color,
-    surface: Color,
-    onOpenPlayer: (Track) -> Unit,
-    onTab: (MusicTab) -> Unit,
-    onSettings: () -> Unit
-) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
-    ) {
+private fun HomePage(inset: PaddingValues, fg: Color, muted: Color, dark: Boolean, onTheme: () -> Unit, onSong: (Song) -> Unit, onPage: (Page) -> Unit) {
+    LazyColumn(Modifier.fillMaxSize().padding(inset), contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 26.dp), verticalArrangement = Arrangement.spacedBy(27.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("GOOD EVENING", color = muted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                    Text("Enjoy your music", color = text, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+                Column(Modifier.weight(1f)) {
+                    Eyebrow("SATURDAY, YOUR WAY")
+                    Spacer(Modifier.height(5.dp))
+                    Text("Good evening.", color = fg, fontSize = 29.sp, fontWeight = FontWeight.ExtraBold)
                 }
-                IconButton(onClick = onSettings) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Toggle theme", tint = text)
+                IconButton(onClick = onTheme, modifier = Modifier.size(46.dp).clip(CircleShape).background(Panel)) {
+                    Icon(if (dark) Icons.Filled.LightMode else Icons.Filled.DarkMode, contentDescription = "Change theme", tint = Lavender)
                 }
-                Box(
-                    modifier = Modifier.size(42.dp).clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Purple, Pink))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.MusicNote, contentDescription = null, tint = Color.White)
-                    Text("♛", color = Gold, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopEnd))
+                Spacer(Modifier.width(9.dp))
+                Box(Modifier.size(46.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Violet, Rose))), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.GraphicEq, contentDescription = "Noire Music", tint = Color.White, modifier = Modifier.size(27.dp))
                 }
             }
         }
+        item { FeaturedCard { onSong(songs.first()) } }
         item {
-            Box(
-                modifier = Modifier.fillMaxWidth().height(205.dp).clip(RoundedCornerShape(26.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF422078), Color(0xFF171127), Color(0xFF9D3E91))))
-            ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1200",
-                    contentDescription = "Featured music artwork",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(26.dp))
-                )
-                Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color(0xDD10091E), Color(0x3310091E), Color(0xAA24102E)))))
-                Column(Modifier.align(Alignment.CenterStart).padding(22.dp)) {
-                    Text("YOUR SOUNDTRACK", color = Color(0xFFE8CFFF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                    Text("Feel every\nbeat.", color = Color.White, fontSize = 30.sp, lineHeight = 34.sp, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.height(12.dp))
-                    Button(onClick = { onOpenPlayer(tracks.first()) }, colors = ButtonDefaults.buttonColors(containerColor = Purple), contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(5.dp))
-                        Text("Listen now")
-                    }
+            Row(verticalAlignment = Alignment.Bottom) {
+                Column(Modifier.weight(1f)) {
+                    Eyebrow("YOUR SPACE")
+                    Text("Jump back in", color = fg, fontSize = 21.sp, fontWeight = FontWeight.Bold)
                 }
-                Icon(Icons.Filled.Album, contentDescription = null, tint = Color.White.copy(alpha = 0.75f), modifier = Modifier.align(Alignment.CenterEnd).padding(24.dp).size(66.dp))
+                Text("SEE ALL", color = Violet, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.clickable { onPage(Page.LIBRARY) }.padding(bottom = 4.dp))
             }
-        }
-        item {
-            SectionTitle("Quick access", "Explore your music", text, muted)
-            Spacer(Modifier.height(13.dp))
+            Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                QuickTile("Songs", Icons.Filled.MusicNote, Purple, Modifier.weight(1f)) { onTab(MusicTab.LIBRARY) }
-                QuickTile("Albums", Icons.Filled.Album, Pink, Modifier.weight(1f)) { onTab(MusicTab.ALBUMS) }
-                QuickTile("Artists", Icons.Filled.Person, Color(0xFF6D8BFF), Modifier.weight(1f)) { onTab(MusicTab.ARTISTS) }
-                QuickTile("Playlists", Icons.Filled.QueueMusic, Color(0xFFB16AE8), Modifier.weight(1f)) { onTab(MusicTab.LIBRARY) }
+                QuickCard("Songs", Icons.Filled.MusicNote, listOf(Color(0xFF39205A), Color(0xFF21172F)), Modifier.weight(1f)) { onPage(Page.LIBRARY) }
+                QuickCard("Albums", Icons.Filled.Album, listOf(Color(0xFF512447), Color(0xFF29182C)), Modifier.weight(1f)) { onPage(Page.ALBUMS) }
+                QuickCard("Artists", Icons.Filled.People, listOf(Color(0xFF263B61), Color(0xFF191D34)), Modifier.weight(1f)) { onPage(Page.ARTISTS) }
+                QuickCard("Mixes", Icons.Filled.QueueMusic, listOf(Color(0xFF49305D), Color(0xFF241A35)), Modifier.weight(1f)) { onPage(Page.LIBRARY) }
             }
         }
         item {
-            SectionTitle("Recently played", "Your latest favorites", text, muted)
-            Spacer(Modifier.height(12.dp))
+            SectionHeader("Made for your mood", "Curated picks", fg, muted)
+            Spacer(Modifier.height(14.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                items(tracks.take(5)) { track ->
-                    Column(Modifier.width(132.dp).clickable { onOpenPlayer(track) }) {
-                        Artwork(track.art, Modifier.fillMaxWidth().height(132.dp))
-                        Spacer(Modifier.height(8.dp))
-                        Text(track.title, color = text, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(track.artist, color = muted, fontSize = 12.sp, maxLines = 1)
+                items(songs.take(4)) { song ->
+                    Column(Modifier.width(142.dp).clickable { onSong(song) }) {
+                        AlbumArtwork(song, Modifier.fillMaxWidth().height(142.dp))
+                        Spacer(Modifier.height(9.dp))
+                        Text(song.album, color = fg, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
+                        Text(song.artist, color = muted, fontSize = 11.sp)
                     }
                 }
             }
         }
         item {
-            SectionTitle("Made for you", "Albums & collections", text, muted)
+            SectionHeader("Recently played", "Pick up where you left off", fg, muted)
             Spacer(Modifier.height(12.dp))
-            AlbumWideCard("BORN PINK", "BLACKPINK • Album", tracks[0].art, text, muted) { onOpenPlayer(tracks[0]) }
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                songs.take(3).forEachIndexed { index, song -> SongRow(song, index + 1, fg, muted) { onSong(song) } }
+            }
         }
     }
 }
 
 @Composable
-private fun SearchScreen(padding: PaddingValues, query: String, onQuery: (String) -> Unit, text: Color, muted: Color, onTrack: (Track) -> Unit) {
-    val filtered = tracks.filter { it.title.contains(query, true) || it.artist.contains(query, true) || it.album.contains(query, true) }
-    Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-        Spacer(Modifier.height(22.dp))
-        Text("Search", color = text, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-        Text("Find songs, albums and artists", color = muted, fontSize = 13.sp)
-        Spacer(Modifier.height(18.dp))
+private fun FeaturedCard(onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().height(232.dp).clip(RoundedCornerShape(30.dp)).background(Brush.linearGradient(listOf(Color(0xFF3C1E62), Color(0xFF171124), Color(0xFF7D326D))))) {
+        Box(Modifier.size(220.dp).align(Alignment.CenterEnd).offset(x = 48.dp, y = (-16).dp).clip(CircleShape).background(Color.White.copy(alpha = 0.055f)))
+        Box(Modifier.size(155.dp).align(Alignment.CenterEnd).offset(x = 10.dp, y = 20.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.055f)))
+        Box(Modifier.size(100.dp).align(Alignment.CenterEnd).offset(x = (-22).dp, y = 20.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.09f)))
+        Column(Modifier.align(Alignment.CenterStart).padding(start = 23.dp, end = 18.dp)) {
+            Text("NOIRE  /  EXCLUSIVE", color = Lavender, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(12.dp))
+            Text("Your music.\nYour universe.", color = Color.White, fontSize = 29.sp, lineHeight = 33.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(17.dp))
+            Row(Modifier.clip(RoundedCornerShape(50)).background(Color.White).clickable(onClick = onClick).padding(horizontal = 17.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color(0xFF31194F))
+                Spacer(Modifier.width(5.dp))
+                Text("PLAY FEATURED", color = Color(0xFF31194F), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+            }
+        }
+        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = Color.White.copy(alpha = 0.85f), modifier = Modifier.align(Alignment.CenterEnd).padding(end = 28.dp).size(64.dp))
+        Text("01", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomEnd).padding(19.dp))
+    }
+}
+
+@Composable
+private fun QuickCard(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, colors: List<Color>, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(modifier.clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(colors)).clickable(onClick = onClick).padding(vertical = 15.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, contentDescription = label, tint = Lavender, modifier = Modifier.size(23.dp))
+        Spacer(Modifier.height(8.dp))
+        Text(label, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun SearchPage(inset: PaddingValues, query: String, onQuery: (String) -> Unit, fg: Color, muted: Color, onSong: (Song) -> Unit) {
+    val filtered = songs.filter { it.title.contains(query, true) || it.artist.contains(query, true) || it.album.contains(query, true) }
+    Column(Modifier.fillMaxSize().padding(inset).padding(horizontal = 22.dp)) {
+        Spacer(Modifier.height(25.dp))
+        Eyebrow("DISCOVER SOMETHING NEW")
+        Text("Search", color = fg, fontSize = 31.sp, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(20.dp))
         OutlinedTextField(
             value = query, onValueChange = onQuery, modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("What do you want to play?") },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            placeholder = { Text("Songs, artists, albums…", color = muted) },
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Violet) },
             trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQuery("") }) { Icon(Icons.Filled.Close, contentDescription = "Clear") } },
-            shape = RoundedCornerShape(18.dp), singleLine = true
+            shape = RoundedCornerShape(18.dp), singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Violet, unfocusedBorderColor = muted.copy(alpha = 0.25f), focusedTextColor = fg, unfocusedTextColor = fg, cursorColor = Violet)
         )
-        Spacer(Modifier.height(22.dp))
-        Text(if (query.isBlank()) "Popular right now" else "Search results", color = text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(25.dp))
+        SectionHeader(if (query.isBlank()) "Trending now" else "Results", filtered.size.toString() + " tracks", fg, muted)
+        Spacer(Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(filtered) { track -> TrackRow(track, text, muted) { onTrack(track) } }
+            items(filtered) { song -> SongRow(song, null, fg, muted) { onSong(song) } }
         }
     }
 }
 
 @Composable
-private fun AlbumsScreen(padding: PaddingValues, text: Color, muted: Color, onTrack: (Track) -> Unit) {
-    Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-        Spacer(Modifier.height(22.dp))
-        Text("Albums", color = text, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-        Text("Your collection, in one place", color = muted, fontSize = 13.sp)
-        Spacer(Modifier.height(18.dp))
-        LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            items(tracks) { track ->
-                Column(Modifier.clickable { onTrack(track) }) {
-                    Artwork(track.art, Modifier.fillMaxWidth().aspectRatio(1f))
-                    Spacer(Modifier.height(8.dp))
-                    Text(track.album, color = text, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(track.artist, color = muted, fontSize = 12.sp)
+private fun AlbumsPage(inset: PaddingValues, fg: Color, muted: Color, onSong: (Song) -> Unit) {
+    Column(Modifier.fillMaxSize().padding(inset).padding(horizontal = 22.dp)) {
+        Spacer(Modifier.height(25.dp))
+        Eyebrow("THE COLLECTION")
+        Text("Albums", color = fg, fontSize = 31.sp, fontWeight = FontWeight.ExtraBold)
+        Text("Records worth coming back to.", color = muted, fontSize = 13.sp)
+        Spacer(Modifier.height(20.dp))
+        LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(19.dp)) {
+            items(songs) { song ->
+                Column(Modifier.clickable { onSong(song) }) {
+                    AlbumArtwork(song, Modifier.fillMaxWidth().aspectRatio(1f))
+                    Spacer(Modifier.height(9.dp))
+                    Text(song.album, color = fg, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(song.artist, color = muted, fontSize = 11.sp)
                 }
             }
         }
@@ -290,20 +258,24 @@ private fun AlbumsScreen(padding: PaddingValues, text: Color, muted: Color, onTr
 }
 
 @Composable
-private fun ArtistsScreen(padding: PaddingValues, text: Color, muted: Color) {
-    LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), contentPadding = PaddingValues(top = 22.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
+private fun ArtistsPage(inset: PaddingValues, fg: Color, muted: Color) {
+    val names = listOf("BLACKPINK" to "4 tracks in your library", "JISOO" to "3 tracks in your library", "NewJeans" to "8 tracks in your library", "IU" to "5 tracks in your library")
+    LazyColumn(Modifier.fillMaxSize().padding(inset).padding(horizontal = 22.dp), contentPadding = PaddingValues(top = 25.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Artists", color = text, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-            Text("The voices behind your favorites", color = muted, fontSize = 13.sp)
-            Spacer(Modifier.height(8.dp))
+            Eyebrow("ARTIST SPOTLIGHT")
+            Text("Artists", color = fg, fontSize = 31.sp, fontWeight = FontWeight.ExtraBold)
+            Text("The people behind the music.", color = muted, fontSize = 13.sp)
+            Spacer(Modifier.height(13.dp))
         }
-        items(artists) { artist ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(12.dp)) {
-                AsyncImage(model = artist.image, contentDescription = artist.name, contentScale = ContentScale.Crop, modifier = Modifier.size(66.dp).clip(CircleShape))
+        items(names) { entry ->
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Panel).padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(58.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Violet, Rose))), contentAlignment = Alignment.Center) {
+                    Text(entry.first.take(1), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(artist.name, color = text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(artist.subtitle, color = muted, fontSize = 12.sp)
+                    Text(entry.first, color = fg, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(entry.second, color = muted, fontSize = 11.sp)
                 }
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = muted)
             }
@@ -312,149 +284,135 @@ private fun ArtistsScreen(padding: PaddingValues, text: Color, muted: Color) {
 }
 
 @Composable
-private fun LibraryScreen(padding: PaddingValues, text: Color, muted: Color, surface: Color, onTab: (MusicTab) -> Unit, onTrack: (Track) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), contentPadding = PaddingValues(top = 22.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+private fun LibraryPage(inset: PaddingValues, fg: Color, muted: Color, onPage: (Page) -> Unit, onSong: (Song) -> Unit) {
+    LazyColumn(Modifier.fillMaxSize().padding(inset).padding(horizontal = 22.dp), contentPadding = PaddingValues(top = 25.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Your Library", color = text, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-            Text("Everything you love, together", color = muted, fontSize = 13.sp)
-            Spacer(Modifier.height(8.dp))
-            LibraryShortcut("Songs", "All your tracks", Icons.Filled.MusicNote, surface, text, muted) { onTrack(tracks.first()) }
-            LibraryShortcut("Albums", "Browse your albums", Icons.Filled.Album, surface, text, muted) { onTab(MusicTab.ALBUMS) }
-            LibraryShortcut("Artists", "Your favorite artists", Icons.Filled.Person, surface, text, muted) { onTab(MusicTab.ARTISTS) }
-            LibraryShortcut("Playlists", "Your personal mixes", Icons.Filled.QueueMusic, surface, text, muted) { onTab(MusicTab.SEARCH) }
-            Spacer(Modifier.height(12.dp))
-            SectionTitle("Recently added", "Pick up where you left off", text, muted)
+            Eyebrow("YOUR PERSONAL SPACE")
+            Text("Library", color = fg, fontSize = 31.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Everything you saved, all in one place.", color = muted, fontSize = 13.sp)
+            Spacer(Modifier.height(14.dp))
+            LibraryTile("Your songs", "Listen to your full collection", Icons.Filled.MusicNote) { onSong(songs.first()) }
+            LibraryTile("Albums", "Browse all saved albums", Icons.Filled.Album) { onPage(Page.ALBUMS) }
+            LibraryTile("Artists", "Explore your favorite artists", Icons.Filled.People) { onPage(Page.ARTISTS) }
+            LibraryTile("Playlists", "Your mixes and playlists", Icons.Filled.QueueMusic) { onPage(Page.SEARCH) }
+            Spacer(Modifier.height(14.dp))
+            SectionHeader("Recently added", "LATEST IN YOUR LIBRARY", fg, muted)
         }
-        items(tracks) { track -> TrackRow(track, text, muted) { onTrack(track) } }
+        items(songs) { song -> SongRow(song, null, fg, muted) { onSong(song) } }
     }
 }
 
 @Composable
-private fun PlayerScreen(track: Track, darkMode: Boolean, onBack: () -> Unit, onNext: () -> Unit, onPrevious: () -> Unit, primaryText: Color, secondaryText: Color) {
-    var playing by remember { mutableStateOf(true) }
-    var liked by remember { mutableStateOf(false) }
-    var progress by remember(track) { mutableFloatStateOf(0.34f) }
-    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Back", tint = primaryText) }
-            Spacer(Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("NOW PLAYING", color = secondaryText, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                Text("From your library", color = primaryText, fontSize = 13.sp)
-            }
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = { liked = !liked }) { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = "Favorite", tint = if (liked) Pink else primaryText) }
-        }
-        Spacer(Modifier.weight(1f))
-        Artwork(track.art, Modifier.fillMaxWidth().aspectRatio(1f).padding(6.dp))
-        Spacer(Modifier.height(30.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(track.title, color = primaryText, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
-                Text(track.artist, color = secondaryText, fontSize = 14.sp)
-            }
-            IconButton(onClick = { liked = !liked }) { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = null, tint = if (liked) Pink else secondaryText) }
-        }
-        Slider(value = progress, onValueChange = { progress = it }, colors = SliderDefaults.colors(thumbColor = Purple, activeTrackColor = Purple, inactiveTrackColor = secondaryText.copy(alpha = 0.3f)))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("1:12", color = secondaryText, fontSize = 11.sp)
-            Text(track.duration, color = secondaryText, fontSize = 11.sp)
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = {}) { Icon(Icons.Filled.Shuffle, contentDescription = "Shuffle", tint = secondaryText) }
-            IconButton(onClick = onPrevious) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = primaryText, modifier = Modifier.size(34.dp)) }
-            FilledIconButton(onClick = { playing = !playing }, modifier = Modifier.size(66.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = Purple)) {
-                Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = "Play or pause", modifier = Modifier.size(34.dp))
-            }
-            IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = primaryText, modifier = Modifier.size(34.dp)) }
-            IconButton(onClick = {}) { Icon(Icons.Filled.Repeat, contentDescription = "Repeat", tint = secondaryText) }
-        }
-        Spacer(Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun MiniPlayer(track: Track, text: Color, muted: Color, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp).clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface).clickable(onClick = onClick).padding(9.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(model = track.art, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(43.dp).clip(RoundedCornerShape(10.dp)))
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(track.title, color = text, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-            Text(track.artist, color = muted, fontSize = 11.sp, maxLines = 1)
-        }
-        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = Purple)
-        IconButton(onClick = onClick) { Icon(Icons.Filled.PlayArrow, contentDescription = "Open player", tint = text) }
-    }
-}
-
-@Composable
-private fun TrackRow(track: Track, text: Color, muted: Color, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).clickable(onClick = onClick).padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = track.art, contentDescription = track.album, contentScale = ContentScale.Crop, modifier = Modifier.size(54.dp).clip(RoundedCornerShape(11.dp)))
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(track.title, color = text, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(track.artist, color = muted, fontSize = 12.sp)
-        }
-        Text(track.duration, color = muted, fontSize = 11.sp)
-        IconButton(onClick = onClick) { Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = muted) }
-    }
-}
-
-@Composable
-private fun Artwork(url: String, modifier: Modifier = Modifier) {
-    AsyncImage(model = url, contentDescription = "Music artwork", contentScale = ContentScale.Crop, modifier = modifier.clip(RoundedCornerShape(20.dp)).background(Color(0xFF29213B)))
-}
-
-@Composable
-private fun SectionTitle(title: String, subtitle: String, text: Color, muted: Color) {
-    Column {
-        Text(title, color = text, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
-        Text(subtitle, color = muted, fontSize = 11.sp)
-    }
-}
-
-@Composable
-private fun QuickTile(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tint: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Column(
-        modifier = modifier.clip(RoundedCornerShape(16.dp)).background(tint.copy(alpha = 0.14f)).clickable(onClick = onClick).padding(vertical = 14.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(icon, contentDescription = title, tint = tint, modifier = Modifier.size(24.dp))
-        Spacer(Modifier.height(7.dp))
-        Text(title, color = MaterialTheme.colorScheme.onSurface, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-    }
-}
-
-@Composable
-private fun LibraryShortcut(title: String, subtitle: String, icon: androidx.compose.ui.graphics.vector.ImageVector, surface: Color, text: Color, muted: Color, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(16.dp)).background(surface).clickable(onClick = onClick).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(Brush.linearGradient(listOf(Purple, Pink))), contentAlignment = Alignment.Center) {
+private fun LibraryTile(title: String, sub: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = 7.dp).clip(RoundedCornerShape(18.dp)).background(Panel).clickable(onClick = onClick).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(listOf(Violet, Rose))), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = Color.White)
         }
         Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = text, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = muted, fontSize = 11.sp)
+            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(sub, color = Soft, fontSize = 11.sp)
         }
-        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = muted)
+        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Soft)
     }
 }
 
 @Composable
-private fun AlbumWideCard(title: String, subtitle: String, image: String, text: Color, muted: Color, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).clickable(onClick = onClick).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Artwork(image, Modifier.size(82.dp))
-        Spacer(Modifier.width(13.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, color = text, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = muted, fontSize = 12.sp)
+private fun PlayerPage(song: Song, playing: Boolean, liked: Boolean, fg: Color, muted: Color, dark: Boolean, onBack: () -> Unit, onPlay: () -> Unit, onLike: () -> Unit, onNext: () -> Unit, onPrevious: () -> Unit) {
+    var progress by remember(song) { mutableFloatStateOf(0.28f) }
+    Column(Modifier.fillMaxSize().background(if (dark) Ink else Color(0xFFF7F4FC)).padding(horizontal = 25.dp, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Close player", tint = fg) }
+            Spacer(Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("NOW PLAYING", color = Violet, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                Text("From your collection", color = muted, fontSize = 11.sp)
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onLike) { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = "Favorite", tint = if (liked) Rose else fg) }
         }
-        Icon(Icons.Filled.PlayCircleFilled, contentDescription = "Play album", tint = Purple, modifier = Modifier.size(34.dp))
+        Spacer(Modifier.weight(0.7f))
+        AlbumArtwork(song, Modifier.fillMaxWidth().aspectRatio(1f).padding(4.dp))
+        Spacer(Modifier.height(34.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(song.title, color = fg, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold)
+                Text(song.artist, color = muted, fontSize = 14.sp)
+            }
+            IconButton(onClick = onLike) { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = "Like song", tint = if (liked) Rose else muted) }
+        }
+        Slider(value = progress, onValueChange = { progress = it }, colors = SliderDefaults.colors(thumbColor = Violet, activeTrackColor = Violet, inactiveTrackColor = muted.copy(alpha = 0.25f)))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("0:52", color = muted, fontSize = 10.sp)
+            Text(song.length, color = muted, fontSize = 10.sp)
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = {}) { Icon(Icons.Filled.Shuffle, contentDescription = "Shuffle", tint = muted) }
+            IconButton(onClick = onPrevious) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = fg, modifier = Modifier.size(34.dp)) }
+            FilledIconButton(onClick = onPlay, modifier = Modifier.size(70.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = Violet)) {
+                Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = "Play pause", tint = Color.White, modifier = Modifier.size(35.dp))
+            }
+            IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = fg, modifier = Modifier.size(34.dp)) }
+            IconButton(onClick = {}) { Icon(Icons.Filled.Repeat, contentDescription = "Repeat", tint = muted) }
+        }
+        Spacer(Modifier.weight(1f))
+        Text("NOIRE  •  MUSIC WITHOUT LIMITS", color = muted.copy(alpha = 0.7f), fontSize = 9.sp, letterSpacing = 1.5.sp)
     }
+}
+
+@Composable
+private fun MiniNowPlaying(song: Song, playing: Boolean, panel: Color, fg: Color, muted: Color, onClick: () -> Unit, onPlay: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 7.dp).clip(RoundedCornerShape(18.dp)).background(panel).clickable(onClick = onClick).padding(9.dp), verticalAlignment = Alignment.CenterVertically) {
+        AlbumArtwork(song, Modifier.size(46.dp))
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f)) {
+            Text(song.title, color = fg, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(song.artist, color = muted, fontSize = 10.sp)
+        }
+        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = Violet, modifier = Modifier.padding(horizontal = 8.dp))
+        IconButton(onClick = onPlay) { Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = "Play pause", tint = fg) }
+    }
+}
+
+@Composable
+private fun SongRow(song: Song, number: Int?, fg: Color, muted: Color, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 6.dp, horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (number != null) Text(number.toString().padStart(2, '0'), color = muted, fontSize = 10.sp, modifier = Modifier.width(27.dp))
+        AlbumArtwork(song, Modifier.size(52.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(song.title, color = fg, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(song.artist + "  •  " + song.album, color = muted, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Text(song.length, color = muted, fontSize = 10.sp)
+        Icon(Icons.Filled.MoreHoriz, contentDescription = "More", tint = muted, modifier = Modifier.padding(start = 8.dp))
+    }
+}
+
+@Composable
+private fun AlbumArtwork(song: Song, modifier: Modifier = Modifier) {
+    Box(modifier.clip(RoundedCornerShape(19.dp)).background(Brush.linearGradient(song.colors))) {
+        Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.22f), Color.Transparent))))
+        Box(Modifier.size(90.dp).align(Alignment.TopEnd).offset(x = 30.dp, y = (-24).dp).clip(CircleShape).background(Color.White.copy(alpha = 0.10f)))
+        Box(Modifier.size(62.dp).align(Alignment.BottomStart).offset(x = (-17).dp, y = 18.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.12f)))
+        Text(song.mark, color = Color.White.copy(alpha = 0.92f), fontSize = 54.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center))
+        Text("NOIRE", color = Color.White.copy(alpha = 0.75f), fontSize = 7.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp))
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, subtitle: String, fg: Color, muted: Color) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = fg, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text(subtitle, color = muted, fontSize = 11.sp)
+        }
+        Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Violet, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+private fun Eyebrow(text: String) {
+    Text(text, color = Violet, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
 }
