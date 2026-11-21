@@ -5,9 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,319 +15,150 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import com.sonora.musicdesign.ui.theme.SonoraTheme
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        window.statusBarColor = android.graphics.Color.rgb(7, 5, 17)
-        window.navigationBarColor = android.graphics.Color.rgb(7, 5, 17)
-        setContent { DesignMusicApp() }
-    }
+private val Bg=Color(0xFF05040D)
+private val Panel=Color(0xFF171426)
+private val Panel2=Color(0xFF211934)
+private val Purple=Color(0xFF9B31FF)
+private val Pink=Color(0xFFE45BFF)
+private val Lilac=Color(0xFFCDA4FF)
+private val Muted=Color(0xFFAAA1BD)
+private val Gold=Color(0xFFFFD66B)
+private data class Song(val title:String,val artist:String,val time:String,val art:Int)
+private val songs=listOf(Song("Pink Venom","BLACKPINK","03:13",0),Song("Dream Big","BLACKPINK","03:42",1),Song("Forever","BTS","03:55",2),Song("Shut Down","BLACKPINK","02:55",3),Song("The Astronaut","Jin","04:25",4))
+private val albums=listOf("BORN PINK","Proof","Afterglow","Blue Hour")
+private val artists=listOf("BLACKPINK","BTS","IU","NewJeans")
+
+class MainActivity:ComponentActivity(){
+ override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState)
+  window.statusBarColor=android.graphics.Color.rgb(5,4,13);window.navigationBarColor=android.graphics.Color.rgb(5,4,13)
+  @Suppress("DEPRECATION") window.decorView.systemUiVisibility=0
+  setContent { DesignMusicApp() }
+ }
 }
 
-private val Violet = Color(0xFF9B35FF)
-private val Pink = Color(0xFFE35BFF)
-private val Gold = Color(0xFFFFD46A)
-private val Ink = Color(0xFF080611)
-private val Panel = Color(0xFF171326)
-private val Muted = Color(0xFFAAA2C0)
-private data class Song(val title: String, val artist: String, val duration: String, val art: Int)
-private val songs = listOf(
-    Song("Pink Venom", "BLACKPINK", "03:13", 0),
-    Song("Dream Big", "BLACKPINK", "03:42", 1),
-    Song("Forever", "BTS", "03:55", 2),
-    Song("Shut Down", "BLACKPINK", "02:55", 3),
-    Song("The Astronaut", "Jin", "04:25", 4)
-)
-private val albums = listOf("BORN PINK", "Proof", "Afterglow", "Blue Hour")
-
-@Composable
-private fun DesignMusicApp() {
-    var page by remember { mutableStateOf("Home") }
-    var current by remember { mutableStateOf(songs[0]) }
-    var playing by remember { mutableStateOf(false) }
-    var dark by remember { mutableStateOf(true) }
-    var query by remember { mutableStateOf("") }
-    var progress by remember { mutableFloatStateOf(.39f) }
-    SonoraTheme(darkTheme = dark) {
-        val bg = if (dark) Ink else Color(0xFFF7F2FF)
-        val surface = if (dark) Panel else Color.White
-        val fg = if (dark) Color.White else Color(0xFF21152F)
-        Scaffold(containerColor = bg, bottomBar = {
-            Column(Modifier.background(bg)) {
-                if (page != "Now Playing") MiniBar(current, playing, surface, { page = "Now Playing" }, { playing = !playing })
-                NavigationBar(containerColor = surface, tonalElevation = 0.dp, modifier = Modifier.height(70.dp)) {
-                    listOf("Home", "Library", "Search", "Settings").forEach { item ->
-                        val icon = when (item) {
-                            "Home" -> Icons.Filled.Home
-                            "Library" -> Icons.Filled.LibraryMusic
-                            "Search" -> Icons.Filled.Search
-                            else -> Icons.Filled.Settings
-                        }
-                        NavigationBarItem(selected = page == item, onClick = { page = item },
-                            icon = { Icon(icon, null, modifier = Modifier.size(22.dp)) },
-                            label = { Text(item, fontSize = 10.sp) },
-                            colors = NavigationBarItemDefaults.colors(selectedIconColor = Pink, selectedTextColor = Pink, unselectedIconColor = Muted, unselectedTextColor = Muted, indicatorColor = Violet.copy(alpha = .18f)))
-                    }
-                }
-            }
-        }) { padding ->
-            when (page) {
-                "Now Playing" -> PlayerPage(current, playing, progress, { progress = it }, { playing = !playing }, { page = "Home" }, fg)
-                "Library" -> LibraryPage(surface, fg, { page = it }, { current = it; page = "Now Playing" })
-                "Search" -> SearchPage(query, { query = it }, fg, { current = it; page = "Now Playing" })
-                "Settings" -> SettingsPage(dark, { dark = it }, fg, surface)
-                "Albums" -> CollectionPage("Albums", albums, surface, fg)
-                "Artists" -> CollectionPage("Artists", listOf("BLACKPINK", "BTS", "IU", "NewJeans"), surface, fg)
-                "Playlists" -> CollectionPage("Playlists", listOf("My favorites", "Late night", "Pop energy", "Chill mix"), surface, fg)
-                else -> HomePage(padding, surface, fg, { page = it }, { current = it; page = "Now Playing" })
-            }
-        }
+@Composable private fun DesignMusicApp(){
+ var page by remember{mutableStateOf("Home")};var song by remember{mutableStateOf(songs[0])};var playing by remember{mutableStateOf(false)}
+ var query by remember{mutableStateOf("")};var progress by remember{mutableFloatStateOf(.39f)}
+ SonoraTheme(darkTheme=true){
+  Scaffold(containerColor=Bg,bottomBar={if(page!="Now Playing") Column(Modifier.background(Bg)){
+   if(page!="Settings") MiniPlayer(song,playing,{page="Now Playing"},{playing=!playing})
+   NavigationBar(containerColor=Bg,contentColor=Color.White,tonalElevation=0.dp,modifier=Modifier.height(68.dp)){
+    listOf("Home","Library","Search","Settings").forEach{p->
+     val ic=when(p){"Home"->Icons.Filled.Home;"Library"->Icons.Filled.LibraryMusic;"Search"->Icons.Filled.Search;else->Icons.Filled.Settings}
+     NavigationBarItem(selected=page==p,onClick={page=p},icon={Icon(ic,null,Modifier.size(23.dp))},label={Text(p,fontSize=10.sp,fontWeight=FontWeight.Medium)},colors=NavigationBarItemDefaults.colors(selectedIconColor=Pink,selectedTextColor=Pink,unselectedIconColor=Muted,unselectedTextColor=Muted,indicatorColor=Color.Transparent))
     }
+   }
+  }}){pad->
+   when(page){
+    "Home"->HomeScreen(pad,{page=it},{song=it;page="Now Playing"})
+    "Library"->LibraryScreen({page=it},{song=it;page="Now Playing"})
+    "Search"->SearchScreen(query,{query=it},{song=it;page="Now Playing"})
+    "Settings"->SettingsScreen()
+    "Now Playing"->PlayerScreen(song,playing,progress,{progress=it},{playing=!playing},{page="Home"},{song=songs[(songs.indexOf(song)+1)%songs.size]})
+    "Albums"->GridCollection("Albums",albums,{page="Now Playing";song=songs[0]})
+    "Artists"->ArtistScreen()
+    "Playlists"->GridCollection("Playlists",listOf("My favorites","Late night","Pop energy","Chill mix"),{})
+    "Songs"->SongsScreen({song=it;page="Now Playing"})
+   }
+  }
+ }
 }
 
-@Composable
-private fun Brand() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(58.dp).clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFF34106E), Color(0xFF100A25)))), contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.MusicNote, null, tint = Violet, modifier = Modifier.size(43.dp))
-            Text("♛", color = Gold, fontSize = 19.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = (-4).dp))
-        }
-        Spacer(Modifier.width(10.dp))
-        Column {
-            Text("Design", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
-            Text("M U S I C   P L A Y E R", fontSize = 9.sp, color = Muted)
-        }
-    }
+@Composable private fun Brand(){
+ Row(verticalAlignment=Alignment.CenterVertically){
+  Box(Modifier.size(66.dp),contentAlignment=Alignment.Center){
+   Box(Modifier.size(60.dp).clip(RoundedCornerShape(19.dp)).background(Brush.linearGradient(listOf(Color(0xFF31106D),Color(0xFF10091F),Color(0xFF35105F)))).border(1.dp,Purple.copy(.45f),RoundedCornerShape(19.dp)))
+   Icon(Icons.Filled.MusicNote,null,tint=Pink,modifier=Modifier.size(53.dp))
+   Text("♛",color=Gold,fontSize=22.sp,modifier=Modifier.align(Alignment.TopCenter).offset(y=(-2).dp))
+  }
+  Spacer(Modifier.width(7.dp))
+  Column {Text("Design",fontSize=27.sp,fontWeight=FontWeight.ExtraBold,color=Color.White,letterSpacing=(-.8).sp);Text("M u s i c  P l a y e r",fontSize=10.sp,color=Muted,letterSpacing=1.sp)}
+ }
 }
+@Composable private fun HomeScreen(pad:PaddingValues,go:(String)->Unit,open:(Song)->Unit){
+ LazyColumn(Modifier.fillMaxSize().padding(bottom=pad.calculateBottomPadding()),contentPadding=PaddingValues(start=18.dp,end=18.dp,top=10.dp,bottom=20.dp),verticalArrangement=Arrangement.spacedBy(22.dp)){
+  item{Row(verticalAlignment=Alignment.CenterVertically){Box(Modifier.weight(1f)){Brand()};IconButton(onClick={go("Search")}){Icon(Icons.Filled.Search,null,tint=Color.White,modifier=Modifier.size(29.dp))};IconButton(onClick={go("Settings")}){Icon(Icons.Filled.Settings,null,tint=Color.White,modifier=Modifier.size(28.dp))}}}
+  item{Box(Modifier.fillMaxWidth().height(188.dp).clip(RoundedCornerShape(29.dp)).background(Brush.linearGradient(listOf(Color(0xFF6A16C9),Color(0xFF2C0A68),Color(0xFF090617))))){
+   Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Purple.copy(.28f),Color.Transparent),center=androidx.compose.ui.geometry.Offset(700f,250f),radius=430f)))
+   Column(Modifier.align(Alignment.CenterStart).padding(start=22.dp)){Text("Enjoy Your Music",fontSize=21.sp,fontWeight=FontWeight.Bold,color=Color.White);Spacer(Modifier.height(6.dp));Row(verticalAlignment=Alignment.CenterVertically){Text("With Design",fontSize=14.sp,color=Color(0xFFDCC8F8));Icon(Icons.Filled.Favorite,null,tint=Pink,modifier=Modifier.padding(start=5.dp).size(17.dp))}}
+   Vinyl(Modifier.size(183.dp).align(Alignment.CenterEnd).offset(x=27.dp))
+   Box(Modifier.align(Alignment.BottomEnd).padding(end=14.dp,bottom=13.dp).size(48.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Pink,Purple))),contentAlignment=Alignment.Center){Icon(Icons.Filled.PlayArrow,null,tint=Color.White,modifier=Modifier.size(32.dp))}
+  }}
+  item{Section("Quick Access","See All",{go("Library")})}
+  item{Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){listOf("Songs" to Icons.Filled.MusicNote,"Albums" to Icons.Filled.Album,"Artists" to Icons.Filled.Person,"Playlists" to Icons.Filled.QueueMusic).forEach{(name,ic)->Column(Modifier.weight(1f).height(101.dp).clip(RoundedCornerShape(21.dp)).background(Brush.linearGradient(listOf(Color(0xFF211A35),Color(0xFF11101D)))).clickable{go(if(name=="Songs")"Songs" else name)}.padding(vertical=13.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){Icon(ic,null,tint=Brush.linearGradient(listOf(Pink,Purple)),modifier=Modifier.size(34.dp));Spacer(Modifier.height(7.dp));Text(name,color=Color.White,fontSize=11.sp)}}}}
+  item{Section("Recently Played","See All",{go("Songs")})}
+  item{LazyRow(horizontalArrangement=Arrangement.spacedBy(13.dp)){items(songs.take(4)){s->Column(Modifier.width(126.dp).clickable{open(s)}){Artwork(s.art,Modifier.fillMaxWidth().aspectRatio(1f));Spacer(Modifier.height(7.dp));Text(s.title,color=Color.White,fontWeight=FontWeight.SemiBold,fontSize=13.sp,maxLines=1);Text(s.artist,color=Muted,fontSize=11.sp)}}}}
+ }
+}
+@Composable private fun Section(title:String,action:String,click:()->Unit){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text(title,color=Color.White,fontSize=18.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Text(action,color=Lilac,fontSize=12.sp,modifier=Modifier.clickable{click()});Icon(Icons.Filled.ChevronRight,null,tint=Lilac,modifier=Modifier.size(18.dp))}}
 
-@Composable
-private fun HomePage(padding: PaddingValues, surface: Color, fg: Color, go: (String) -> Unit, song: (Song) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()),
-        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)) {
-        item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { Brand() }
-                IconButton(onClick = { go("Search") }) { Icon(Icons.Filled.Search, null, tint = Color.White, modifier = Modifier.size(27.dp)) }
-                IconButton(onClick = { go("Settings") }) { Icon(Icons.Filled.Settings, null, tint = Color.White, modifier = Modifier.size(27.dp)) }
-            }
-        }
-        item {
-            Box(Modifier.fillMaxWidth().height(190.dp).clip(RoundedCornerShape(27.dp)).background(Brush.linearGradient(listOf(Color(0xFF5C13B8), Color(0xFF210A53), Color(0xFF090617)))).padding(22.dp)) {
-                Column(Modifier.align(Alignment.CenterStart)) {
-                    Text("Enjoy Your Music", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(7.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("With Design", color = Color(0xFFD9C8F6), fontSize = 14.sp)
-                        Spacer(Modifier.width(5.dp))
-                        Icon(Icons.Filled.Favorite, null, tint = Pink, modifier = Modifier.size(17.dp))
-                    }
-                }
-                VinylRecord(Modifier.size(180.dp).align(Alignment.CenterEnd).offset(x = 28.dp))
-                Box(Modifier.align(Alignment.BottomEnd).size(48.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Pink, Violet))), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(32.dp))
-                }
-            }
-        }
-        item { SectionTitle("Quick Access", "See All", { go("Library") }, fg) }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf("Songs" to Icons.Filled.MusicNote, "Albums" to Icons.Filled.Album, "Artists" to Icons.Filled.Person, "Playlists" to Icons.Filled.QueueMusic).forEach { pair ->
-                    Column(Modifier.weight(1f).clip(RoundedCornerShape(19.dp)).background(surface).clickable { go(if (pair.first == "Songs") "Library" else pair.first) }.padding(vertical = 15.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(pair.second, null, tint = Pink, modifier = Modifier.size(34.dp))
-                        Spacer(Modifier.height(7.dp))
-                        Text(pair.first, color = fg, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-            }
-        }
-        item { SectionTitle("Recently Played", "See All", { go("Library") }, fg) }
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(songs.take(4)) { s ->
-                    Column(Modifier.width(126.dp).clickable { song(s) }) {
-                        AlbumArtwork(s.art, Modifier.fillMaxWidth().aspectRatio(1f))
-                        Spacer(Modifier.height(7.dp))
-                        Text(s.title, color = fg, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 13.sp)
-                        Text(s.artist, color = Muted, fontSize = 11.sp)
-                    }
-                }
-            }
-        }
-    }
+@Composable private fun Vinyl(modifier:Modifier=Modifier){
+ Box(modifier.clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFF8A39FF),Color(0xFF160B29),Color(0xFF030208)))) .border(1.dp,Pink.copy(.35f),CircleShape),contentAlignment=Alignment.Center){
+  repeat(9){i->Box(Modifier.fillMaxSize(1f-i*.075f).border(1.dp,Color.White.copy(.09f),CircleShape))}
+  Box(Modifier.fillMaxSize(.36f).clip(CircleShape).background(Brush.radialGradient(listOf(Pink,Purple,Color(0xFF16072D)))),contentAlignment=Alignment.Center){Box(Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF0A0612)))}
+ }
 }
-
-@Composable
-private fun SectionTitle(title: String, action: String, click: () -> Unit, fg: Color) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, color = fg, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        Text(action, color = Color(0xFFC98BFF), fontSize = 12.sp, modifier = Modifier.clickable { click() })
-        Icon(Icons.Filled.ChevronRight, null, tint = Color(0xFFC98BFF), modifier = Modifier.size(17.dp))
-    }
+@Composable private fun Artwork(index:Int,modifier:Modifier=Modifier){
+ val bg=when(index%5){0->listOf(Color(0xFF4B0878),Color(0xFF09030F),Color(0xFF19082E));1->listOf(Color(0xFF7435FF),Color(0xFF140A40),Color(0xFF05040D));2->listOf(Color(0xFFEE77CE),Color(0xFF432078),Color(0xFF100B26));3->listOf(Color(0xFF6025E8),Color(0xFF180B46),Color(0xFF05040D));else->listOf(Color(0xFF1378C8),Color(0xFF101C50),Color(0xFF05040D))}
+ Box(modifier.clip(RoundedCornerShape(17.dp)).background(Brush.linearGradient(bg)).border(1.dp,Color.White.copy(.12f),RoundedCornerShape(17.dp)),contentAlignment=Alignment.Center){
+  when(index%5){
+   0->Column(horizontalAlignment=Alignment.CenterHorizontally){Text("✧",color=Pink,fontSize=26.sp);Text("♕",color=Color(0xFFFF9BEF),fontSize=68.sp);Text("✦  ✧  ✦",color=Pink,fontSize=14.sp)}
+   1->Box(Modifier.fillMaxSize(.53f).clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFF160B50),Color(0xFF05040D)))).border(2.dp,Purple,CircleShape),contentAlignment=Alignment.Center){Icon(Icons.Filled.Person,null,tint=Color(0xFF080619),modifier=Modifier.size(70.dp))}
+   2->Text("♡",color=Pink,fontSize=95.sp)
+   3->Text("◈",color=Color.White,fontSize=75.sp)
+   else->Icon(Icons.Filled.Person,null,tint=Color(0xFF80BFFF),modifier=Modifier.size(82.dp))
+  }
+ }
 }
-
-@Composable
-private fun VinylRecord(modifier: Modifier = Modifier) {
-    Box(modifier.clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFF5B26A8), Color(0xFF080611), Color(0xFF211334)))).border(1.dp, Violet.copy(alpha = .5f), CircleShape), contentAlignment = Alignment.Center) {
-        repeat(5) { i -> Box(Modifier.fillMaxSize(.88f - i * .13f).border(1.dp, Color.White.copy(alpha = .09f), CircleShape)) }
-        Box(Modifier.size(57.dp).clip(CircleShape).background(Brush.radialGradient(listOf(Pink, Violet, Color(0xFF35106D)))), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF18072B)))
-        }
-    }
+@Composable private fun MiniPlayer(s:Song,playing:Boolean,open:()->Unit,toggle:()->Unit){
+ Row(Modifier.fillMaxWidth().padding(horizontal=10.dp,vertical=4.dp).clip(RoundedCornerShape(18.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF21182F),Color(0xFF151121)))).clickable{open()}.padding(horizontal=10.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically){
+  Artwork(s.art,Modifier.size(48.dp));Spacer(Modifier.width(11.dp));Column(Modifier.weight(1f)){Text(s.title,color=Color.White,fontSize=13.sp,fontWeight=FontWeight.SemiBold);Text(s.artist,color=Muted,fontSize=11.sp)}
+  IconButton(onClick=toggle){Icon(if(playing)Icons.Filled.Pause else Icons.Filled.PlayArrow,null,tint=Pink,modifier=Modifier.size(27.dp))}
+  IconButton(onClick=open){Icon(Icons.Filled.SkipNext,null,tint=Color.White,modifier=Modifier.size(25.dp))}
+ }
 }
-
-@Composable
-private fun AlbumArtwork(index: Int, modifier: Modifier = Modifier) {
-    val gradients = listOf(
-        listOf(Color(0xFF5A0D8D), Color(0xFF16072D), Color(0xFF030208)),
-        listOf(Color(0xFF2A1C78), Color(0xFF0C123A), Color(0xFF050612)),
-        listOf(Color(0xFFED63C9), Color(0xFF6B2DA5), Color(0xFF130A2B)),
-        listOf(Color(0xFF6D39F2), Color(0xFF220B60), Color(0xFF050611)),
-        listOf(Color(0xFF1367B6), Color(0xFF101A50), Color(0xFF030611))
-    )
-    Box(modifier.clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(gradients[index % gradients.size])).border(1.dp, Color.White.copy(alpha = .12f), RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
-        if (index == 0) Text("♕", color = Color(0xFFFF8DEB), fontSize = 66.sp)
-        else if (index == 1 || index == 4) Icon(Icons.Filled.Person, null, tint = Color.White.copy(alpha = .55f), modifier = Modifier.size(62.dp))
-        else Icon(Icons.Filled.Favorite, null, tint = Pink.copy(alpha = .8f), modifier = Modifier.size(58.dp))
-    }
+@Composable private fun LibraryScreen(go:(String)->Unit,open:(Song)->Unit){
+ LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(18.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
+  item{Row(verticalAlignment=Alignment.CenterVertically){Text("Library",color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Icon(Icons.Filled.Search,null,tint=Color.White,modifier=Modifier.size(26.dp))}}
+  items(listOf("Songs" to "All your songs","Albums" to "All albums","Artists" to "All artists","Playlists" to "Your playlists")){(name,desc)->
+   Row(Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(19.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF201A30),Color(0xFF141221)))).clickable{go(name)}.padding(horizontal=14.dp),verticalAlignment=Alignment.CenterVertically){
+    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Brush.linearGradient(listOf(Color(0xFF401A87),Color(0xFF160D2D)))),contentAlignment=Alignment.Center){when(name){"Songs"->Icon(Icons.Filled.MusicNote,null,tint=Pink,modifier=Modifier.size(30.dp));"Albums"->Text("●",color=Purple,fontSize=28.sp);"Artists"->Icon(Icons.Filled.Person,null,tint=Purple,modifier=Modifier.size(30.dp));else->Icon(Icons.Filled.QueueMusic,null,tint=Pink,modifier=Modifier.size(30.dp))}}
+    Spacer(Modifier.width(14.dp));Column(Modifier.weight(1f)){Text(name,color=Color.White,fontWeight=FontWeight.SemiBold,fontSize=14.sp);Text(desc,color=Muted,fontSize=11.sp)};Icon(Icons.Filled.ChevronRight,null,tint=Muted)
+   }
+  }
+  item{Section("Recently Added","See All",{go("Songs")})}
+  item{Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){songs.take(3).forEach{s->Artwork(s.art,Modifier.weight(1f).aspectRatio(1f).clickable{open(s)})}}}
+  items(songs){s->Row(Modifier.fillMaxWidth().clickable{open(s)}.padding(vertical=4.dp),verticalAlignment=Alignment.CenterVertically){Artwork(s.art,Modifier.size(48.dp));Spacer(Modifier.width(10.dp));Column(Modifier.weight(1f)){Text(s.title,color=Color.White,fontSize=13.sp,fontWeight=FontWeight.SemiBold);Text(s.artist,color=Muted,fontSize=11.sp)};Icon(Icons.Filled.MoreHoriz,null,tint=Muted)}}
+ }
 }
-
-@Composable
-private fun MiniBar(song: Song, playing: Boolean, surface: Color, open: () -> Unit, play: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(17.dp)).background(surface).clickable { open() }.padding(9.dp), verticalAlignment = Alignment.CenterVertically) {
-        AlbumArtwork(song.art, Modifier.size(45.dp))
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(song.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(song.artist, color = Muted, fontSize = 10.sp)
-        }
-        IconButton(onClick = play) { Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, null, tint = Pink) }
-        IconButton(onClick = open) { Icon(Icons.Filled.SkipNext, null, tint = Color.White) }
-    }
+@Composable private fun SearchScreen(q:String,onQ:(String)->Unit,open:(Song)->Unit){
+ Column(Modifier.fillMaxSize().padding(18.dp)){Row(verticalAlignment=Alignment.CenterVertically){Text("Search",color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold)}
+ Spacer(Modifier.height(16.dp));OutlinedTextField(q,onQ,Modifier.fillMaxWidth(),placeholder={Text("Songs, artists, albums...",color=Muted)},leadingIcon={Icon(Icons.Filled.Search,null,tint=Muted)},singleLine=true,shape=RoundedCornerShape(18.dp),colors=OutlinedTextFieldDefaults.colors(focusedBorderColor=Pink,unfocusedBorderColor=Panel2,focusedTextColor=Color.White,unfocusedTextColor=Color.White))
+ Spacer(Modifier.height(18.dp));Text(if(q.isBlank())"Popular right now" else "Results",color=Color.White,fontSize=18.sp,fontWeight=FontWeight.Bold)
+ songs.filter{it.title.contains(q,true)||it.artist.contains(q,true)}.forEach{s->Row(Modifier.fillMaxWidth().clickable{open(s)}.padding(vertical=8.dp),verticalAlignment=Alignment.CenterVertically){Artwork(s.art,Modifier.size(52.dp));Spacer(Modifier.width(12.dp));Column{Text(s.title,color=Color.White,fontWeight=FontWeight.SemiBold);Text(s.artist,color=Muted,fontSize=11.sp)}}}
+ }
 }
-
-@Composable
-private fun PlayerPage(song: Song, playing: Boolean, progress: Float, onProgress: (Float) -> Unit, play: () -> Unit, back: () -> Unit, fg: Color) {
-    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF16082C), Ink, Ink))).padding(horizontal = 25.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = back) { Icon(Icons.Filled.KeyboardArrowDown, null, tint = fg) }
-            Spacer(Modifier.weight(1f))
-            Text("NOW PLAYING", color = Muted, fontSize = 11.sp, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = {}) { Icon(Icons.Filled.MoreVert, null, tint = fg) }
-        }
-        AlbumArtwork(song.art, Modifier.fillMaxWidth().aspectRatio(1f).padding(4.dp))
-        Column(Modifier.fillMaxWidth()) {
-            Text(song.title, color = fg, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-            Text(song.artist, color = Pink, fontSize = 15.sp)
-            Spacer(Modifier.height(18.dp))
-            Slider(value = progress, onValueChange = onProgress, colors = SliderDefaults.colors(thumbColor = Pink, activeTrackColor = Pink, inactiveTrackColor = Color(0xFF392B4C)))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("01:24", color = Muted, fontSize = 11.sp)
-                Text(song.duration, color = Muted, fontSize = 11.sp)
-            }
-            Spacer(Modifier.height(16.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = {}) { Icon(Icons.Filled.Shuffle, null, tint = Muted) }
-                IconButton(onClick = {}) { Icon(Icons.Filled.SkipPrevious, null, tint = fg, modifier = Modifier.size(30.dp)) }
-                Box(Modifier.size(66.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Pink, Violet))).clickable { play() }, contentAlignment = Alignment.Center) {
-                    Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(34.dp))
-                }
-                IconButton(onClick = {}) { Icon(Icons.Filled.SkipNext, null, tint = fg, modifier = Modifier.size(30.dp)) }
-                IconButton(onClick = {}) { Icon(Icons.Filled.Repeat, null, tint = Muted) }
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Icon(Icons.Filled.Devices, null, tint = Muted)
-            Icon(Icons.Filled.QueueMusic, null, tint = Muted)
-        }
-    }
+@Composable private fun SongsScreen(open:(Song)->Unit){LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(18.dp)){item{Text("Songs",color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold)};items(songs){s->Row(Modifier.fillMaxWidth().clickable{open(s)}.padding(vertical=8.dp),verticalAlignment=Alignment.CenterVertically){Artwork(s.art,Modifier.size(55.dp));Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text(s.title,color=Color.White,fontWeight=FontWeight.SemiBold);Text(s.artist,color=Muted,fontSize=11.sp)};Text(s.time,color=Muted,fontSize=11.sp)}}}}
+@Composable private fun GridCollection(title:String,names:List<String>,open:()->Unit){
+ Column(Modifier.fillMaxSize().padding(18.dp)){Row(verticalAlignment=Alignment.CenterVertically){Text(title,color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Icon(Icons.Filled.Search,null,tint=Color.White)}
+ LazyColumn{items(names.chunked(2)){row->Row(horizontalArrangement=Arrangement.spacedBy(12.dp),modifier=Modifier.padding(top=14.dp)){row.forEachIndexed{idx,n->Column(Modifier.weight(1f).clickable{open()}){Artwork(idx,Modifier.fillMaxWidth().aspectRatio(1f));Spacer(Modifier.height(5.dp));Text(n,color=Color.White,fontSize=13.sp,fontWeight=FontWeight.SemiBold);Text(if(title=="Albums")if(idx==0)"BLACKPINK" else "BTS" else "Your collection",color=Muted,fontSize=11.sp)}};if(row.size==1)Spacer(Modifier.weight(1f))}}}
+ }
 }
-
-@Composable
-private fun LibraryPage(surface: Color, fg: Color, go: (String) -> Unit, song: (Song) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(13.dp)) {
-        item { Text("Library", color = fg, fontSize = 27.sp, fontWeight = FontWeight.Bold) }
-        items(listOf("Songs" to "All your songs", "Albums" to "All albums", "Artists" to "All artists", "Playlists" to "Your playlists")) { pair ->
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(surface).clickable { go(pair.first) }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(listOf(Violet, Pink))), contentAlignment = Alignment.Center) {
-                    Icon(when (pair.first) { "Songs" -> Icons.Filled.MusicNote; "Albums" -> Icons.Filled.Album; "Artists" -> Icons.Filled.Person; else -> Icons.Filled.QueueMusic }, null, tint = Color.White)
-                }
-                Spacer(Modifier.width(13.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(pair.first, color = fg, fontWeight = FontWeight.SemiBold)
-                    Text(pair.second, color = Muted, fontSize = 11.sp)
-                }
-                Icon(Icons.Filled.ChevronRight, null, tint = Muted)
-            }
-        }
-        item { SectionTitle("Recently Added", "See All", { go("Songs") }, fg) }
-        items(songs) { s ->
-            Row(Modifier.fillMaxWidth().clickable { song(s) }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                AlbumArtwork(s.art, Modifier.size(55.dp))
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) { Text(s.title, color = fg, fontWeight = FontWeight.SemiBold); Text(s.artist, color = Muted, fontSize = 11.sp) }
-                Icon(Icons.Filled.MoreHoriz, null, tint = Muted)
-            }
-        }
-    }
+@Composable private fun ArtistScreen(){Column(Modifier.fillMaxSize().padding(18.dp)){Text("Artists",color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(15.dp));artists.forEachIndexed{i,a->Row(Modifier.fillMaxWidth().padding(bottom=10.dp).clip(RoundedCornerShape(19.dp)).background(Panel).padding(10.dp),verticalAlignment=Alignment.CenterVertically){Artwork(i,Modifier.size(64.dp).clip(CircleShape));Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text(a,color=Color.White,fontWeight=FontWeight.SemiBold);Text(listOf("5 songs","8 songs","3 songs","4 songs")[i],color=Muted,fontSize=11.sp)};Icon(Icons.Filled.ChevronRight,null,tint=Muted)}}}}
+@Composable private fun PlayerScreen(s:Song,playing:Boolean,progress:Float,onProgress:(Float)->Unit,toggle:()->Unit,back:()->Unit,next:()->Unit){
+ Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF160825),Bg,Bg))).padding(horizontal=25.dp,vertical=10.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.SpaceBetween){
+  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){IconButton(onClick=back){Icon(Icons.Filled.KeyboardArrowDown,null,tint=Color.White)};Spacer(Modifier.weight(1f));Icon(Icons.Filled.MoreVert,null,tint=Color.White)}
+  Artwork(s.art,Modifier.fillMaxWidth(.88f).aspectRatio(1f))
+  Column(Modifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally){Text(s.title,color=Color.White,fontSize=22.sp,fontWeight=FontWeight.Bold);Text(s.artist,color=Pink,fontSize=14.sp);Spacer(Modifier.height(15.dp));Slider(progress,onProgress,colors=SliderDefaults.colors(thumbColor=Pink,activeTrackColor=Pink,inactiveTrackColor=Panel2));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("01:24",color=Muted,fontSize=11.sp);Text(s.time,color=Muted,fontSize=11.sp)}
+   Spacer(Modifier.height(14.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){Icon(Icons.Filled.Shuffle,null,tint=Muted);Icon(Icons.Filled.SkipPrevious,null,tint=Color.White,modifier=Modifier.size(28.dp).clickable{back()});Box(Modifier.size(66.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Pink,Purple))).clickable{toggle()},contentAlignment=Alignment.Center){Icon(if(playing)Icons.Filled.Pause else Icons.Filled.PlayArrow,null,tint=Color.White,modifier=Modifier.size(34.dp))};Icon(Icons.Filled.SkipNext,null,tint=Color.White,modifier=Modifier.size(28.dp).clickable{next()});Icon(Icons.Filled.Repeat,null,tint=Muted)}
+  }
+  Row(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween){Icon(Icons.Filled.Devices,null,tint=Muted);Icon(Icons.Filled.QueueMusic,null,tint=Muted)}
+ }
 }
-
-@Composable
-private fun SearchPage(query: String, onQuery: (String) -> Unit, fg: Color, song: (Song) -> Unit) {
-    Column(Modifier.fillMaxSize().padding(18.dp)) {
-        Text("Search", color = fg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(17.dp))
-        OutlinedTextField(value = query, onValueChange = onQuery, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Songs, artists, albums...") }, leadingIcon = { Icon(Icons.Filled.Search, null) }, singleLine = true, shape = RoundedCornerShape(18.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pink, unfocusedBorderColor = Color(0xFF44335C), focusedTextColor = fg, unfocusedTextColor = fg))
-        Spacer(Modifier.height(20.dp))
-        Text(if (query.isBlank()) "Popular right now" else "Results", color = fg, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        songs.filter { it.title.contains(query, true) || it.artist.contains(query, true) }.forEach { s ->
-            Row(Modifier.fillMaxWidth().clickable { song(s) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                AlbumArtwork(s.art, Modifier.size(52.dp))
-                Spacer(Modifier.width(12.dp))
-                Column { Text(s.title, color = fg, fontWeight = FontWeight.SemiBold); Text(s.artist, color = Muted, fontSize = 11.sp) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CollectionPage(title: String, names: List<String>, surface: Color, fg: Color) {
-    Column(Modifier.fillMaxSize().padding(18.dp)) {
-        Text(title, color = fg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(18.dp))
-        names.forEachIndexed { index, name ->
-            Row(Modifier.fillMaxWidth().padding(bottom = 12.dp).clip(RoundedCornerShape(18.dp)).background(surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                AlbumArtwork(index, Modifier.size(62.dp))
-                Spacer(Modifier.width(13.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(name, color = fg, fontWeight = FontWeight.SemiBold)
-                    Text(if (title == "Artists") "5 songs" else "Your collection", color = Muted, fontSize = 11.sp)
-                }
-                Icon(Icons.Filled.ChevronRight, null, tint = Muted)
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingsPage(dark: Boolean, onDark: (Boolean) -> Unit, fg: Color, surface: Color) {
-    Column(Modifier.fillMaxSize().padding(18.dp)) {
-        Text("Settings", color = fg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(18.dp))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(surface).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.DarkMode, null, tint = Pink)
-            Spacer(Modifier.width(12.dp))
-            Text("Dark mode", color = fg, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-            Switch(checked = dark, onCheckedChange = onDark, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Violet))
-        }
-    }
-}
+@Composable private fun SettingsScreen(){Column(Modifier.fillMaxSize().padding(20.dp)){Text("Settings",color=Color.White,fontSize=27.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(15.dp));Text("Design Music Player",color=Muted,fontSize=14.sp);Text("Purple glow • Dark experience",color=Muted,fontSize=12.sp)}}
