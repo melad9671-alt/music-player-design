@@ -72,13 +72,16 @@ private fun SonoraApp() {
                         listOf(
                             "Home" to Icons.Filled.Home,
                             "Search" to Icons.Filled.Search,
+                            "Albums" to Icons.Filled.Album,
+                            "Artists" to Icons.Filled.People,
                             "Library" to Icons.Filled.LibraryMusic
                         ).forEach { (label, icon) ->
                             NavigationBarItem(
                                 selected = selected == label,
                                 onClick = { selected = label },
                                 icon = { Icon(icon, contentDescription = label) },
-                                label = { Text(label) },
+                                label = { Text(label, maxLines = 1, fontSize = 10.sp) },
+                                alwaysShowLabel = true,
                                 colors = NavigationBarItemDefaults.colors(selectedIconColor = cs.primary, indicatorColor = cs.surfaceVariant)
                             )
                         }
@@ -124,8 +127,12 @@ private fun HomeScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Column {
-                    Text("SONORA", color = cs.primary, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
-                    Text("Good evening", fontSize = 27.sp, fontWeight = FontWeight.Bold, color = cs.onBackground)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.MusicNote, null, tint = cs.primary, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("DESIGN", color = cs.primary, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
+                    }
+                    Text("Music Player", fontSize = 27.sp, fontWeight = FontWeight.Bold, color = cs.onBackground)
                 }
                 IconButton(onClick = onTheme, modifier = Modifier.size(46.dp).background(cs.surfaceVariant, CircleShape)) {
                     Icon(if (dark) Icons.Filled.LightMode else Icons.Filled.DarkMode, contentDescription = "Toggle theme")
