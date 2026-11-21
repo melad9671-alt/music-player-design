@@ -1120,7 +1120,7 @@ fun ArtworkBox(
         ArtType.HEART_NEON -> Brush.radialGradient(listOf(Color(0xFF3C096C), Color(0xFF090510)))
         ArtType.PROOF_SHIELD -> Brush.verticalGradient(listOf(Color(0xFF2B2B36), Color(0xFF08080A)))
         ArtType.SUNSET_MOUNTAIN -> Brush.verticalGradient(listOf(Color(0xFFFF758F), Color(0xFF5A189A)))
-        ArtType.BLUE_SKY -> Brush.verticalGradient(listOf(Color(0xFF48CAE4), Color(0xFF1D3557))
+        ArtType.BLUE_SKY -> Brush.verticalGradient(listOf(Color(0xFF48CAE4), Color(0xFF1D3557)))
     }
 
     Box(
