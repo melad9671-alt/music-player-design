@@ -202,8 +202,7 @@ private fun HomeScreen(
                 Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color(0xDD10091E), Color(0x3310091E), Color(0xAA24102E)))))
                 Column(Modifier.align(Alignment.CenterStart).padding(22.dp)) {
                     Text("YOUR SOUNDTRACK", color = Color(0xFFE8CFFF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                    Text("Feel every
-beat.", color = Color.White, fontSize = 30.sp, lineHeight = 34.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("Feel every\nbeat.", color = Color.White, fontSize = 30.sp, lineHeight = 34.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(12.dp))
                     Button(onClick = { onOpenPlayer(tracks.first()) }, colors = ButtonDefaults.buttonColors(containerColor = Purple), contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
