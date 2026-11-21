@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sonora.musicdesign"
+    namespace = "com.design.musicplayer"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sonora.musicdesign"
+        applicationId = "com.design.musicplayer"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
